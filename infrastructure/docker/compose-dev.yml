@@ -1,0 +1,57 @@
+name: astroway-dev
+
+services:
+  # Database for Auth & User Service
+  postgres-auth:
+    image: postgres:16-alpine
+    container_name: astroway-auth-db
+    environment:
+      POSTGRES_DB: auth_db
+      POSTGRES_USER: astro_user
+      POSTGRES_PASSWORD: astro_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - auth_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U astro_user -d auth_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Database for Astro Catalog & Spots Service
+  postgres-catalog:
+    image: postgres:16-alpine
+    container_name: astroway-catalog-db
+    environment:
+      POSTGRES_DB: catalog_db
+      POSTGRES_USER: astro_user
+      POSTGRES_PASSWORD: astro_password
+    ports:
+      - "5433:5432" # Mapped to 5433 on host to avoid port conflict
+    volumes:
+      - catalog_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U astro_user -d catalog_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Cache layer for Sessions, API Caching, and Rate Limiting
+  redis:
+    image: redis:7-alpine
+    container_name: astroway-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  auth_db_data:
+  catalog_db_data:
+  redis_data:

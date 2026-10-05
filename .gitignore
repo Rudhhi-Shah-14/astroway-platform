@@ -1,0 +1,26 @@
+# IDE / OS
+.idea/
+.vscode/
+*.DS_Store
+*.swp
+
+# Build artifacts (Java / Maven / Gradle)
+target/
+*.jar
+*.war
+.mvn/
+
+# Node / React
+node_modules/
+dist/
+build/
+.npm
+*.log
+
+# Environment & Secret files
+.env
+*.pem
+*.key
+
+# Local Infrastructure Data Volumes
+.docker-data/
