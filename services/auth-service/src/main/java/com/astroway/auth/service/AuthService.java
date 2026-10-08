@@ -3,6 +3,7 @@ package com.astroway.auth.service;
 import com.astroway.auth.dto.AuthResponse;
 import com.astroway.auth.dto.LoginRequest;
 import com.astroway.auth.dto.RegisterRequest;
+import com.astroway.auth.dto.UserSummaryDto;
 import com.astroway.auth.model.RefreshToken;
 import com.astroway.auth.model.Role;
 import com.astroway.auth.model.User;
@@ -18,6 +19,10 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 
 import java.time.Instant;
 import java.util.*;
@@ -144,6 +149,22 @@ public class AuthService {
 
         // 2. Publish Async Event to Kafka for downstream catalog-service cleanup
         userEventProducer.publishUserDeletedEvent(user.getId(), user.getUsername(), user.getEmail());
+    }
+
+    @Transactional(readOnly = true)
+    public Page<UserSummaryDto> getAllUsers(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
+
+        return userRepository.findAll(pageable)
+                .map(user -> UserSummaryDto.builder()
+                        .id(user.getId())
+                        .username(user.getUsername())
+                        .email(user.getEmail())
+                        .enabled(user.isEnabled())
+                        .roles(user.getRoles().stream().map(Role::getName).collect(Collectors.toList()))
+                        .createdAt(user.getCreatedAt())
+                        .build()
+                );
     }
 
     private RefreshToken createRefreshToken(User user) {

@@ -3,12 +3,15 @@ package com.astroway.auth.controller;
 import com.astroway.auth.dto.AuthResponse;
 import com.astroway.auth.dto.LoginRequest;
 import com.astroway.auth.dto.RegisterRequest;
+import com.astroway.auth.dto.UserSummaryDto;
 import com.astroway.auth.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.data.domain.Page;
 import java.util.Map;
 import java.util.HashMap;
 
@@ -40,5 +43,15 @@ public class AuthController {
         Map<String, String> response = new HashMap<>();
         response.put("message", "User account deleted successfully. Asynchronous cleanup triggered.");
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/users")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Page<UserSummaryDto>> getAllUsers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        Page<UserSummaryDto> users = authService.getAllUsers(page, size);
+        return ResponseEntity.ok(users);
     }
 }
