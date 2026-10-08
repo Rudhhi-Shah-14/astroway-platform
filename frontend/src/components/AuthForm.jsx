@@ -6,6 +6,7 @@ import AuthError from "./auth/AuthError";
 import AuthHeader from "./auth/AuthHeader";
 import AuthLayout from "./auth/AuthLayout";
 import AuthTabs from "./auth/AuthTabs";
+import GoogleSignIn from "./auth/GoogleSignIn";
 import LoginFields from "./auth/LoginFields";
 import RegisterFields from "./auth/RegisterFields";
 
@@ -22,6 +23,8 @@ const AuthForm = ({ onAuthSuccess }) => {
     handleModeChange,
     togglePasswordVisibility,
     handleSubmit,
+    handleGoogleLogin,
+    handleGoogleError,
   } = useAuth({
     onAuthSuccess,
   });
@@ -76,6 +79,25 @@ const AuthForm = ({ onAuthSuccess }) => {
               : "Create Account"}
         </button>
       </form>
+
+      {/* Google Sign-In */}
+      <div className="my-6 flex items-center gap-3">
+        <div className="h-px flex-1 bg-white/10" />
+
+        <span className="text-xs text-gray-500">
+          OR
+        </span>
+
+        <div className="h-px flex-1 bg-white/10" />
+      </div>
+
+      <div className="flex justify-center">
+        <GoogleSignIn
+          onSuccess={handleGoogleLogin}
+          onError={handleGoogleError}
+          disabled={loading}
+        />
+      </div>
     </AuthLayout>
   );
 };

@@ -88,6 +88,51 @@ const useAuth = ({ onAuthSuccess }) => {
     }
   };
 
+  // Google Sign-In
+  const handleGoogleLogin = async (credentialResponse) => {
+    if (!credentialResponse?.credential) {
+      setErrorMessage("Google Sign-In failed.");
+      return;
+    }
+
+    setLoading(true);
+    setErrorMessage("");
+
+    try {
+      const response = await authAPI.googleLogin({
+        idToken: credentialResponse.credential,
+        role: formData.role,
+      });
+
+      authStorage.setAuthData(response.data);
+
+      onAuthSuccess(response.data);
+    } catch (err) {
+      console.error("Google authentication error:", err);
+
+      if (err.response?.data?.validationErrors) {
+        const validationErrors = err.response.data.validationErrors;
+        const firstError = Object.values(validationErrors)[0];
+
+        setErrorMessage(firstError);
+      } else if (err.response?.data?.message) {
+        setErrorMessage(err.response.data.message);
+      } else if (!err.response) {
+        setErrorMessage(
+          "Cannot connect to Auth Service on localhost:8081."
+        );
+      } else {
+        setErrorMessage("Google Sign-In failed.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleError = () => {
+    setErrorMessage("Google Sign-In failed.");
+  };
+
   return {
     isLogin,
     showPassword,
@@ -99,6 +144,9 @@ const useAuth = ({ onAuthSuccess }) => {
     handleModeChange,
     togglePasswordVisibility,
     handleSubmit,
+
+    handleGoogleLogin,
+    handleGoogleError,
   };
 };
 

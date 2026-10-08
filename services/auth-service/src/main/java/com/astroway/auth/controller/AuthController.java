@@ -1,6 +1,7 @@
 package com.astroway.auth.controller;
 
 import com.astroway.auth.dto.AuthResponse;
+import com.astroway.auth.dto.GoogleAuthRequest;
 import com.astroway.auth.dto.LoginRequest;
 import com.astroway.auth.dto.RegisterRequest;
 import com.astroway.auth.dto.UserSummaryDto;
@@ -53,5 +54,11 @@ public class AuthController {
     ) {
         Page<UserSummaryDto> users = authService.getAllUsers(page, size);
         return ResponseEntity.ok(users);
+    }
+
+    @PostMapping("/google")
+    public ResponseEntity<AuthResponse> googleAuth(@Valid @RequestBody GoogleAuthRequest request) {
+        AuthResponse response = authService.loginWithGoogle(request.getIdToken(), request.getRole());
+        return ResponseEntity.ok(response);
     }
 }

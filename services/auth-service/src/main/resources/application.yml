@@ -38,10 +38,13 @@ application:
   security:
     jwt:
       # 256-bit secret key for HMAC-SHA256
-      secret-key: 404E635266556A586E3272357538782F413F4428472B4B6250655368566D5971
+      secret-key: ${JWT_SECRET_KEY}
       expiration: 86400000 # 24 Hours in milliseconds
       refresh-token:
         expiration: 604800000 # 7 Days in milliseconds
+    oauth2:
+      google:
+        client-id: ${GOOGLE_CLIENT_ID}
 
   kafka:
     topics:

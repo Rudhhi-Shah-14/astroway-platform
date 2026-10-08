@@ -19,8 +19,11 @@ build/
 
 # Environment & Secret files
 .env
+.env.local
+*.env
 *.pem
 *.key
+*.properties
 
 # Local Infrastructure Data Volumes
 .docker-data/

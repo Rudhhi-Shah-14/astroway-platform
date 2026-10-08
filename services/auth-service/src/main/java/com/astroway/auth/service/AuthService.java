@@ -1,6 +1,7 @@
 package com.astroway.auth.service;
 
 import com.astroway.auth.dto.AuthResponse;
+import com.astroway.auth.dto.GoogleAuthRequest;
 import com.astroway.auth.dto.LoginRequest;
 import com.astroway.auth.dto.RegisterRequest;
 import com.astroway.auth.dto.UserSummaryDto;
@@ -11,9 +12,11 @@ import com.astroway.auth.producer.UserEventProducer;
 import com.astroway.auth.repository.RefreshTokenRepository;
 import com.astroway.auth.repository.RoleRepository;
 import com.astroway.auth.repository.UserRepository;
+import com.astroway.auth.security.GoogleOAuthService;
 import com.astroway.auth.security.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -42,6 +45,9 @@ public class AuthService {
 
     @Value("${application.security.jwt.refresh-token.expiration}")
     private long refreshTokenExpirationMs;
+
+    @Autowired
+    private GoogleOAuthService googleOAuthService;
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
@@ -115,6 +121,59 @@ public class AuthService {
         refreshTokenRepository.deleteByUser(user);
 
         // 4. Generate new Access and Refresh Tokens
+        List<String> roleNames = user.getRoles().stream()
+                .map(Role::getName)
+                .collect(Collectors.toList());
+
+        String jwtToken = jwtService.generateToken(user.getId(), user.getUsername(), roleNames);
+        RefreshToken refreshToken = createRefreshToken(user);
+
+        return AuthResponse.builder()
+                .accessToken(jwtToken)
+                .refreshToken(refreshToken.getToken())
+                .tokenType("Bearer")
+                .userId(user.getId())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .roles(roleNames)
+                .build();
+    }
+
+    @Transactional
+    public AuthResponse loginWithGoogle(String idToken, String requestedRole) {
+        // 1. Verify Google Token & Extract Claims
+        var payload = googleOAuthService.verifyToken(idToken);
+        String email = payload.getEmail();
+        String name = (String) payload.get("name");
+
+        // 2. Derive a clean unique username from email/name
+        String username = email.split("@")[0].replaceAll("[^a-zA-Z0-9_]", "_");
+
+        // 3. Find existing user or register new OAuth user
+        User user = userRepository.findByEmail(email)
+                .orElseGet(() -> {
+                    String roleName = (requestedRole != null && !requestedRole.isBlank())
+                            ? (requestedRole.startsWith("ROLE_") ? requestedRole : "ROLE_" + requestedRole)
+                            : "ROLE_EXPLORER";
+
+                    Role userRole = roleRepository.findByName(roleName)
+                            .orElseGet(() -> roleRepository.save(Role.builder().name(roleName).build()));
+
+                    Set<Role> roles = new HashSet<>();
+                    roles.add(userRole);
+
+                    return userRepository.save(User.builder()
+                            .username(userRepository.existsByUsername(username) ? username + "_" + UUID.randomUUID().toString().substring(0, 4) : username)
+                            .email(email)
+                            .password(null) // No password for OAuth users
+                            .enabled(true)
+                            .roles(roles)
+                            .build());
+                });
+
+        // 4. Revoke previous refresh tokens & issue standard AstroWay JWT
+        refreshTokenRepository.deleteByUser(user);
+
         List<String> roleNames = user.getRoles().stream()
                 .map(Role::getName)
                 .collect(Collectors.toList());
