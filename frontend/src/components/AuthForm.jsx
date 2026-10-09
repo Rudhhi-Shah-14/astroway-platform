@@ -1,4 +1,5 @@
 import React from "react";
+import { User } from "lucide-react";
 
 import useAuth from "../hooks/useAuth";
 
@@ -25,6 +26,7 @@ const AuthForm = ({ onAuthSuccess }) => {
     handleSubmit,
     handleGoogleLogin,
     handleGoogleError,
+    handleGuestLogin,
   } = useAuth({
     onAuthSuccess,
   });
@@ -98,6 +100,31 @@ const AuthForm = ({ onAuthSuccess }) => {
           disabled={loading}
         />
       </div>
+
+      {/* Guest Login */}
+      <div className="relative my-6">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-white/10" />
+        </div>
+
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-[#0B0F19] px-2 text-gray-500">
+            OR
+          </span>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        onClick={handleGuestLogin}
+        disabled={loading}
+        className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-gray-300 transition hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        <span className="flex items-center justify-center gap-2">
+          <User className="h-4 w-4 text-gray-400" />
+          Continue as Guest Stargazer
+        </span>
+      </button>
     </AuthLayout>
   );
 };

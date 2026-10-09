@@ -193,6 +193,50 @@ public class AuthService {
     }
 
     @Transactional
+    public AuthResponse loginAsGuest() {
+        // 1. Generate unique guest credentials
+        String guestUuid = UUID.randomUUID().toString().substring(0, 8);
+        String guestUsername = "guest_" + guestUuid;
+        String guestEmail = guestUsername + "@guest.astroway.local";
+
+        // 2. Resolve or create ROLE_GUEST
+        Role guestRole = roleRepository.findByName("ROLE_GUEST")
+                .orElseGet(() -> roleRepository.save(Role.builder().name("ROLE_GUEST").build()));
+
+        Set<Role> roles = new HashSet<>();
+        roles.add(guestRole);
+
+        // 3. Save Ephemeral Guest User
+        User guestUser = User.builder()
+                .username(guestUsername)
+                .email(guestEmail)
+                .password(null) // Guests do not have passwords
+                .enabled(true)
+                .roles(roles)
+                .build();
+
+        User savedGuest = userRepository.save(guestUser);
+
+        // 4. Generate Access & Refresh Tokens
+        List<String> roleNames = savedGuest.getRoles().stream()
+                .map(Role::getName)
+                .collect(Collectors.toList());
+
+        String jwtToken = jwtService.generateToken(savedGuest.getId(), savedGuest.getUsername(), roleNames);
+        RefreshToken refreshToken = createRefreshToken(savedGuest);
+
+        return AuthResponse.builder()
+                .accessToken(jwtToken)
+                .refreshToken(refreshToken.getToken())
+                .tokenType("Bearer")
+                .userId(savedGuest.getId())
+                .username(savedGuest.getUsername())
+                .email(savedGuest.getEmail())
+                .roles(roleNames)
+                .build();
+    }
+
+    @Transactional
     public void deleteAccount(Long userId, String authenticatedUsername) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + userId));

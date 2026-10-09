@@ -21,9 +21,9 @@
     <!-- Sub-modules in our monorepo -->
     <modules>
         <module>services/auth-service</module>
+        <module>services/catalog-service</module>
         <!-- We will uncomment these as we create them:
         <module>services/api-gateway</module>
-        <module>services/catalog-service</module>
         <module>services/ai-service</module>
         -->
     </modules>

@@ -45,6 +45,9 @@ application:
     oauth2:
       google:
         client-id: ${GOOGLE_CLIENT_ID}
+    guest:
+      token-expiration: 3600000
+      ttl-hours: 24
 
   kafka:
     topics:

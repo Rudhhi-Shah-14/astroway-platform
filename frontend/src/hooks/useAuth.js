@@ -129,6 +129,28 @@ const useAuth = ({ onAuthSuccess }) => {
     }
   };
 
+  //handle Guest log-in
+  const handleGuestLogin = async () => {
+    setLoading(true);
+    setErrorMessage("");
+
+    try {
+      const response = await authAPI.guestLogin();
+
+      authStorage.setAuthData(response.data);
+
+      onAuthSuccess(response.data);
+    } catch (err) {
+      console.error("Guest authentication error:", err);
+
+      setErrorMessage(
+        "Failed to initiate guest session. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleGoogleError = () => {
     setErrorMessage("Google Sign-In failed.");
   };
@@ -147,6 +169,8 @@ const useAuth = ({ onAuthSuccess }) => {
 
     handleGoogleLogin,
     handleGoogleError,
+
+    handleGuestLogin,
   };
 };
 

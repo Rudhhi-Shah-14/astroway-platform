@@ -35,6 +35,12 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/guest")
+    public ResponseEntity<AuthResponse> guestLogin() {
+        AuthResponse response = authService.loginAsGuest();
+        return ResponseEntity.ok(response);
+    }
+
     @DeleteMapping("/users/{id}")
     public ResponseEntity<Map<String, String>> deleteUser(
             @PathVariable Long id,

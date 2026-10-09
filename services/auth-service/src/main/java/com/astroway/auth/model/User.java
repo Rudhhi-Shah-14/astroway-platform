@@ -3,7 +3,9 @@ package com.astroway.auth.model;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -26,7 +28,7 @@ public class User {
     private String email;
 
     @Column(nullable = true)
-    private String password; // Stored as BCrypt hash
+    private String password; // Stored as BCrypt hash (nullable for OAuth2/Guest)
 
     @Builder.Default
     @Column(nullable = false)
@@ -49,4 +51,14 @@ public class User {
     )
     @Builder.Default
     private Set<Role> roles = new HashSet<>();
+
+    // Cascade deletion for associated refresh tokens
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<RefreshToken> refreshTokens = new ArrayList<>();
+
+    @PreUpdate
+    public void setLastUpdate() {
+        this.updatedAt = Instant.now();
+    }
 }
